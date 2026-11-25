@@ -293,7 +293,7 @@ sum += sample * sample;
 }
 energies.push(Math.sqrt(sum / windowSize));
 }
-const beats = new Array(0);
+const beats = new Array(1).fill(0);
 const thresholdFactor = 1.6 - (sensitivity * 0.05);
 const minGapSec = 0.28;
 for (let i = 10; i < energies.length; i++) {
