@@ -184,16 +184,16 @@
     </label>
 
     <div class="row">
-      <button id="previewBtn" class="secondary">▶ Preview</button>
-      <button id="renderBtn">🔴 Render & Export</button>
+      <button id="previewBtn" class="secondary" type="button">▶ Preview</button>
+      <button id="renderBtn" type="button">🔴 Render & Export</button>
     </div>
-    <button id="stopBtn" class="secondary" style="display:none;">⏹ Stop</button>
+    <button id="stopBtn" class="secondary" type="button" style="display:none;">⏹ Stop</button>
   </div>
 
   <div class="panel preview-area">
     <canvas id="studioCanvas" width="1280" height="720"></canvas>
     <div class="status-bar">
-      <span id="statusText">Upload an audio track and images/videos to begin.</span>
+      <span id="statusText">Ready! Upload an audio track and images/videos to begin.</span>
       <span id="timeDisplay">00:00 / 00:00</span>
     </div>
     <progress id="progressBar" value="0" max="100"></progress>
@@ -212,10 +212,9 @@ const syncStatus = document.getElementById("syncStatus");
 
 let customFontFamily = "sans-serif";
 let stopRequested = false;
-let tappedTimings = [];
+let tappedTimings = new Array();
 let currentPlaybackElapsed = 0;
 
-// Load Custom Font
 document.getElementById("fontInput").addEventListener("change", async (e) => {
   const file = e.target.files.item(0);
   if (!file) return;
@@ -228,13 +227,11 @@ document.getElementById("fontInput").addEventListener("change", async (e) => {
   statusText.textContent = "Loaded custom font: " + file.name;
 });
 
-// Reset tapped lyric timings
 document.getElementById("clearSyncBtn").addEventListener("click", () => {
-  tappedTimings = [];
+  tappedTimings = new Array();
   syncStatus.textContent = "Timings cleared. Hit Preview and tap 'Tap Next Lyric' to re-time.";
 });
 
-// Live Lyric Tap Handler
 document.getElementById("tapSyncBtn").addEventListener("click", () => {
   const rawLines = document.getElementById("lyricLinesInput").value
     .split(/\r?\n/)
@@ -259,10 +256,9 @@ const nextPreview = nextLine ? 'Next: "' + nextLine + '"' : "All lines timed!";
 syncStatus.innerHTML = "Stamped line " + (idx + 1) + "/" + rawLines.length + " at " + currentPlaybackElapsed.toFixed(1) + "s. " + nextPreview + "";
 }
 });
-// Parse .SRT Subtitles
 function parseSRT(srtText) {
 const blocks = srtText.trim().split(/\r?\n\r?\n/);
-const subs = [];
+const subs = new Array();
 const timeRegex = /(\d+):(\d+):(\d+),.\s*-->\s*(\d+):(\d+):(\d+),./;
 for (const block of blocks) {
 const lines = block.split(/\r?\n/);
@@ -279,12 +275,11 @@ break;
 }
 return subs;
 }
-// Detect Beats from AudioBuffer
 function detectBeats(audioBuffer, sensitivity) {
 const data = audioBuffer.getChannelData(0);
 const sampleRate = audioBuffer.sampleRate;
 const windowSize = Math.floor(sampleRate * 0.05);
-const energies = [];
+const energies = new Array();
 for (let i = 0; i < data.length; i += windowSize) {
 let sum = 0;
 for (let j = 0; j < windowSize && i + j < data.length; j++) {
@@ -309,9 +304,8 @@ beats.push(timeSec);
 }
 return beats;
 }
-// Load Visual Assets
 async function loadMediaAssets(files) {
-const assets = [];
+const assets = new Array();
 for (let i = 0; i < files.length; i++) {
 const file = files.item(i);
 const url = URL.createObjectURL(file);
@@ -337,7 +331,6 @@ const m = Math.floor(sec / 60).toString().padStart(2, "0");
 const s = Math.floor(sec % 60).toString().padStart(2, "0");
 return m + ":" + s;
 }
-// Draw a single asset with cover scaling, Beat Zoom, and Ken Burns motion
 function drawSceneAsset(asset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, alpha) {
 ctx.save();
 ctx.globalAlpha = alpha;
@@ -385,7 +378,7 @@ document.getElementById("stopBtn").style.display = "block";
 const rawLines = document.getElementById("lyricLinesInput").value
 .split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
 if (!recordMode && rawLines.length > 0) {
-if (tappedTimings.length >= rawLines.length) tappedTimings = [];
+if (tappedTimings.length >= rawLines.length) tappedTimings = new Array();
 document.getElementById("tapSyncBtn").disabled = false;
 }
 const resParts = document.getElementById("resolutionSelect").value.split("x").map(Number);
@@ -409,7 +402,7 @@ const cutTimes = allBeats.filter((_, idx) => idx % beatsPerCut === 0);
 if (cutTimes.length === 0) cutTimes.push(0);
 statusText.textContent = "Loading images & video clips...";
 const assets = await loadMediaAssets(mediaFiles);
-let subtitles = [];
+let subtitles = new Array();
 const srtFiles = document.getElementById("srtInput").files;
 if (tappedTimings.length > 0) {
 subtitles = tappedTimings;
@@ -431,15 +424,13 @@ const freqData = new Uint8Array(analyser.frequencyBinCount);
 source.connect(analyser);
 analyser.connect(audioCtx.destination);
 let recorder = null;
-const chunks = [];
+const chunks = new Array();
 if (recordMode) {
 const dest = audioCtx.createMediaStreamDestination();
 analyser.connect(dest);
 const canvasStream = canvas.captureStream(30);
-const combinedStream = new MediaStream([
-...canvasStream.getVideoTracks(),
-...dest.stream.getAudioTracks()
-]);
+const trackList = canvasStream.getVideoTracks().concat(dest.stream.getAudioTracks());
+const combinedStream = new MediaStream(trackList);
 const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
 ? "video/webm;codecs=vp9,opus"
 : "video/webm";
