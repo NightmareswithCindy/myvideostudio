@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Beat-Sync Music Video & Movie Studio Pro</title>
+<title>Beat-Sync Music Video & Movie Studio</title>
 <style>
   :root {
     --bg: #0f1117;
@@ -90,7 +90,7 @@
 
 <header>
   <h1>🎬 Beat-Sync Music Video & Movie Studio</h1>
-  <span>Crossfades • Ken Burns Motion • Live Lyric Tapper</span>
+  <span>v3.0 • Instant Ready</span>
 </header>
 
 <div class="container">
@@ -108,7 +108,7 @@
       <input type="text" id="titleText" placeholder="Movie Title or Artist Name..." />
     </label>
     <label>Custom Font (.ttf, .otf, .woff Optional)
-      <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2" />
+      <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2" onchange="loadUserFont(this)" />
     </label>
     <div class="row">
       <label>Font Size (px)
@@ -130,8 +130,8 @@
       <textarea id="lyricLinesInput" placeholder="Type or paste lyrics here, one line per phrase...&#10;Line 1: Walking through the neon rain&#10;Line 2: Midnight city calls my name"></textarea>
     </label>
     <div class="row">
-      <button id="tapSyncBtn" class="tap-btn" type="button" disabled>⏱ Tap Next Lyric (During Preview)</button>
-      <button id="clearSyncBtn" class="secondary" type="button">Reset Timings</button>
+      <button id="tapSyncBtn" class="tap-btn" type="button" onclick="tapNextLyric()" disabled>⏱ Tap Next Lyric (During Preview)</button>
+      <button id="clearSyncBtn" class="secondary" type="button" onclick="clearLyricTimings()">Reset Timings</button>
     </div>
     <div id="syncStatus" class="hint">Tip: Paste lyrics above, hit <b>Preview</b>, and tap the red button each time a new line starts!</div>
     <label>Or Load External .SRT File
@@ -184,16 +184,16 @@
     </label>
 
     <div class="row">
-      <button id="previewBtn" class="secondary" type="button">▶ Preview</button>
-      <button id="renderBtn" type="button">🔴 Render & Export</button>
+      <button id="previewBtn" class="secondary" type="button" onclick="runStudio(false)">▶ Preview</button>
+      <button id="renderBtn" type="button" onclick="runStudio(true)">🔴 Render & Export</button>
     </div>
-    <button id="stopBtn" class="secondary" type="button" style="display:none;">⏹ Stop</button>
+    <button id="stopBtn" class="secondary" type="button" onclick="stopStudio()" style="display:none;">⏹ Stop</button>
   </div>
 
   <div class="panel preview-area">
     <canvas id="studioCanvas" width="1280" height="720"></canvas>
     <div class="status-bar">
-      <span id="statusText">Ready! Upload an audio track and images/videos to begin.</span>
+      <span id="statusText">v3.0 Ready! Upload an audio track and images/videos to begin.</span>
       <span id="timeDisplay">00:00 / 00:00</span>
     </div>
     <progress id="progressBar" value="0" max="100"></progress>
@@ -202,73 +202,73 @@
 </div>
 
 <script>
-const canvas = document.getElementById("studioCanvas");
-const ctx = canvas.getContext("2d");
-const statusText = document.getElementById("statusText");
-const timeDisplay = document.getElementById("timeDisplay");
-const progressBar = document.getElementById("progressBar");
-const downloadContainer = document.getElementById("downloadContainer");
-const syncStatus = document.getElementById("syncStatus");
+var customFontFamily = "sans-serif";
+var stopRequested = false;
+var tappedTimings = new Array();
+var currentPlaybackElapsed = 0;
 
-let customFontFamily = "sans-serif";
-let stopRequested = false;
-let tappedTimings = new Array();
-let currentPlaybackElapsed = 0;
+function setStatus(msg) {
+  document.getElementById("statusText").textContent = msg;
+}
 
-document.getElementById("fontInput").addEventListener("change", async (e) => {
-  const file = e.target.files.item(0);
-  if (!file) return;
-  const buf = await file.arrayBuffer();
-  const fontName = "UserCustomFont_" + Date.now();
-  const fontFace = new FontFace(fontName, buf);
-  await fontFace.load();
-  document.fonts.add(fontFace);
-  customFontFamily = fontName;
-  statusText.textContent = "Loaded custom font: " + file.name;
-});
+async function loadUserFont(input) {
+  try {
+    var file = input.files.item(0);
+    if (!file) return;
+    var buf = await file.arrayBuffer();
+    var fontName = "UserCustomFont_" + Date.now();
+    var fontFace = new FontFace(fontName, buf);
+    await fontFace.load();
+    document.fonts.add(fontFace);
+    customFontFamily = fontName;
+    setStatus("Loaded custom font: " + file.name);
+  } catch (e) {
+    alert("Font error: " + e.message);
+  }
+}
 
-document.getElementById("clearSyncBtn").addEventListener("click", () => {
+function clearLyricTimings() {
   tappedTimings = new Array();
-  syncStatus.textContent = "Timings cleared. Hit Preview and tap 'Tap Next Lyric' to re-time.";
-});
+  document.getElementById("syncStatus").textContent = "Timings cleared. Hit Preview and tap 'Tap Next Lyric' to re-time.";
+}
 
-document.getElementById("tapSyncBtn").addEventListener("click", () => {
-  const rawLines = document.getElementById("lyricLinesInput").value
+function tapNextLyric() {
+  var rawLines = document.getElementById("lyricLinesInput").value
     .split(/\r?\n/)
-    .map(l => l.trim())
-    .filter(l => l.length > 0);
+    .map(function(l) { return l.trim(); })
+    .filter(function(l) { return l.length > 0; });
 
   if (rawLines.length === 0) return;
 
-  const idx = tappedTimings.length;
+  var idx = tappedTimings.length;
   if (idx > 0) {
     tappedTimings.at(idx - 1).end = currentPlaybackElapsed;
   }
   if (idx < rawLines.length) {
     tappedTimings.push({
+      start: currentPlaybackElapsed,
+      end: currentPlaybackElapsed + 5.0,
+      text: rawLines.at(idx)
+    });
+    var nextLine = rawLines.at(idx + 1);
 Use code with caution.
-start: currentPlaybackElapsed,
-end: currentPlaybackElapsed + 5.0,
-text: rawLines.at(idx)
-});
-const nextLine = rawLines.at(idx + 1);
-const nextPreview = nextLine ? 'Next: "' + nextLine + '"' : "All lines timed!";
-syncStatus.innerHTML = "Stamped line " + (idx + 1) + "/" + rawLines.length + " at " + currentPlaybackElapsed.toFixed(1) + "s. " + nextPreview + "";
+var nextPreview = nextLine ? 'Next: "' + nextLine + '"' : "All lines timed!";
+document.getElementById("syncStatus").innerHTML = "Stamped line " + (idx + 1) + "/" + rawLines.length + " at " + currentPlaybackElapsed.toFixed(1) + "s. " + nextPreview + "";
 }
-});
+}
 function parseSRT(srtText) {
-const blocks = srtText.trim().split(/\r?\n\r?\n/);
-const subs = new Array();
-const timeRegex = /(\d+):(\d+):(\d+),.\s*-->\s*(\d+):(\d+):(\d+),./;
-for (const block of blocks) {
-const lines = block.split(/\r?\n/);
-for (let i = 0; i < lines.length; i++) {
-const m = lines.at(i).match(timeRegex);
+var blocks = srtText.trim().split(/\r?\n\r?\n/);
+var subs = new Array();
+var timeRegex = /(\d+):(\d+):(\d+),.\s*-->\s*(\d+):(\d+):(\d+),./;
+for (var b = 0; b < blocks.length; b++) {
+var lines = blocks.at(b).split(/\r?\n/);
+for (var i = 0; i < lines.length; i++) {
+var m = lines.at(i).match(timeRegex);
 if (m) {
-const start = Number(m.at(1)) * 3600 + Number(m.at(2)) * 60 + Number(m.at(3)) + Number(m.at(4)) / 1000;
-const end = Number(m.at(5)) * 3600 + Number(m.at(6)) * 60 + Number(m.at(7)) + Number(m.at(8)) / 1000;
-const text = lines.slice(i + 1).join(" ").trim();
-if (text) subs.push({ start, end, text });
+var start = Number(m.at(1)) * 3600 + Number(m.at(2)) * 60 + Number(m.at(3)) + Number(m.at(4)) / 1000;
+var end = Number(m.at(5)) * 3600 + Number(m.at(6)) * 60 + Number(m.at(7)) + Number(m.at(8)) / 1000;
+var text = lines.slice(i + 1).join(" ").trim();
+if (text) subs.push({ start: start, end: end, text: text });
 break;
 }
 }
@@ -276,27 +276,27 @@ break;
 return subs;
 }
 function detectBeats(audioBuffer, sensitivity) {
-const data = audioBuffer.getChannelData(0);
-const sampleRate = audioBuffer.sampleRate;
-const windowSize = Math.floor(sampleRate * 0.05);
-const energies = new Array();
-for (let i = 0; i < data.length; i += windowSize) {
-let sum = 0;
-for (let j = 0; j < windowSize && i + j < data.length; j++) {
-const sample = data.at(i + j);
+var data = audioBuffer.getChannelData(0);
+var sampleRate = audioBuffer.sampleRate;
+var windowSize = Math.floor(sampleRate * 0.05);
+var energies = new Array();
+for (var i = 0; i < data.length; i += windowSize) {
+var sum = 0;
+for (var j = 0; j < windowSize && i + j < data.length; j++) {
+var sample = data.at(i + j);
 sum += sample * sample;
 }
 energies.push(Math.sqrt(sum / windowSize));
 }
-const beats = new Array(1).fill(0);
-const thresholdFactor = 1.6 - (sensitivity * 0.05);
-const minGapSec = 0.28;
-for (let i = 10; i < energies.length; i++) {
-let localAvg = 0;
-for (let k = i - 10; k < i; k++) localAvg += energies.at(k);
+var beats = new Array(1).fill(0);
+var thresholdFactor = 1.6 - (sensitivity * 0.05);
+var minGapSec = 0.28;
+for (var k = 10; k < energies.length; k++) {
+var localAvg = 0;
+for (var m = k - 10; m < k; m++) localAvg += energies.at(m);
 localAvg /= 10;
-const timeSec = (i * windowSize) / sampleRate;
-if (energies.at(i) > localAvg * thresholdFactor && energies.at(i) > 0.03) {
+var timeSec = (k * windowSize) / sampleRate;
+if (energies.at(k) > localAvg * thresholdFactor && energies.at(k) > 0.03) {
 if (timeSec - beats.at(-1) >= minGapSec) {
 beats.push(timeSec);
 }
@@ -305,205 +305,224 @@ beats.push(timeSec);
 return beats;
 }
 async function loadMediaAssets(files) {
-const assets = new Array();
-for (let i = 0; i < files.length; i++) {
-const file = files.item(i);
-const url = URL.createObjectURL(file);
+var assets = new Array();
+for (var i = 0; i < files.length; i++) {
+var file = files.item(i);
+var url = URL.createObjectURL(file);
 if (file.type.startsWith("video/")) {
-const vid = document.createElement("video");
+var vid = document.createElement("video");
 vid.src = url;
 vid.muted = true;
 vid.loop = true;
 vid.playsInline = true;
-await new Promise((res) => { vid.onloadedmetadata = res; });
+await new Promise(function(res, rej) {
+vid.onloadedmetadata = res;
+vid.onerror = function() { rej(new Error("Could not load video: " + file.name)); };
+});
 assets.push({ type: "video", el: vid });
 } else {
-const img = new Image();
+var img = new Image();
 img.src = url;
-await new Promise((res) => { img.onload = res; });
+await new Promise(function(res, rej) {
+img.onload = res;
+img.onerror = function() { rej(new Error("Could not load image: " + file.name)); };
+});
 assets.push({ type: "image", el: img });
 }
 }
 return assets;
 }
 function formatTime(sec) {
-const m = Math.floor(sec / 60).toString().padStart(2, "0");
-const s = Math.floor(sec % 60).toString().padStart(2, "0");
+var m = Math.floor(sec / 60).toString().padStart(2, "0");
+var s = Math.floor(sec % 60).toString().padStart(2, "0");
 return m + ":" + s;
 }
-function drawSceneAsset(asset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, alpha) {
+function drawSceneAsset(ctx, asset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, alpha) {
 ctx.save();
 ctx.globalAlpha = alpha;
 ctx.filter = filterMode;
-const mediaW = asset.type === "video" ? asset.el.videoWidth : asset.el.width;
-const mediaH = asset.type === "video" ? asset.el.videoHeight : asset.el.height;
-const baseScale = Math.max(W / mediaW, H / mediaH);
-const pulse = beatZoom ? 1.0 + 0.07 * Math.exp(-6 * timeSinceCut) : 1.0;
-let kbScale = 1.0;
-let panX = 0;
-let panY = 0;
+var mediaW = asset.type === "video" ? asset.el.videoWidth : asset.el.width;
+var mediaH = asset.type === "video" ? asset.el.videoHeight : asset.el.height;
+if (!mediaW || !mediaH) { ctx.restore(); return; }
+var baseScale = Math.max(W / mediaW, H / mediaH);
+var pulse = beatZoom ? 1.0 + 0.07 * Math.exp(-6 * timeSinceCut) : 1.0;
+var kbScale = 1.0;
+var panX = 0;
+var panY = 0;
 if (kenBurns) {
-const dir = sceneIdx % 4;
-const progress = Math.min(timeSinceCut / 6.0, 1.0);
+var dir = sceneIdx % 4;
+var progress = Math.min(timeSinceCut / 6.0, 1.0);
 kbScale = 1.04 + 0.06 * progress;
-const maxShiftX = (mediaW * baseScale * kbScale - W) * 0.4;
-const maxShiftY = (mediaH * baseScale * kbScale - H) * 0.4;
+var maxShiftX = (mediaW * baseScale * kbScale - W) * 0.4;
+var maxShiftY = (mediaH * baseScale * kbScale - H) * 0.4;
 if (dir === 0) { panX = -maxShiftX * progress; }
 else if (dir === 1) { panX = maxShiftX * progress; }
 else if (dir === 2) { panY = -maxShiftY * progress; }
 else { panY = maxShiftY * progress; }
 }
-const finalScale = baseScale * pulse * kbScale;
-const drawW = mediaW * finalScale;
-const drawH = mediaH * finalScale;
-const x = (W - drawW) / 2 + panX;
-const y = (H - drawH) / 2 + panY;
+var finalScale = baseScale * pulse * kbScale;
+var drawW = mediaW * finalScale;
+var drawH = mediaH * finalScale;
+var x = (W - drawW) / 2 + panX;
+var y = (H - drawH) / 2 + panY;
 ctx.drawImage(asset.el, x, y, drawW, drawH);
 ctx.restore();
 }
+function stopStudio() {
+stopRequested = true;
+setStatus("Stopped.");
+}
 async function runStudio(recordMode) {
 try {
-const audioFiles = document.getElementById("audioInput").files;
-const mediaFiles = document.getElementById("mediaInput").files;
+setStatus("Starting...");
+var audioFiles = document.getElementById("audioInput").files;
+var mediaFiles = document.getElementById("mediaInput").files;
 if (!audioFiles || audioFiles.length === 0 || !mediaFiles || mediaFiles.length === 0) {
-alert("Please upload both an audio track and at least one image or video clip.");
+setStatus("Missing files: Please select a song and an image/video at the top.");
+alert("Please scroll to the top of the left sidebar and upload both a Song and at least one Image or Video clip.");
 return;
 }
-const audioFile = audioFiles.item(0);
+var canvas = document.getElementById("studioCanvas");
+var ctx = canvas.getContext("2d");
+var timeDisplay = document.getElementById("timeDisplay");
+var progressBar = document.getElementById("progressBar");
+var downloadContainer = document.getElementById("downloadContainer");
+var audioFile = audioFiles.item(0);
 stopRequested = false;
 downloadContainer.innerHTML = "";
 document.getElementById("previewBtn").disabled = true;
 document.getElementById("renderBtn").disabled = true;
 document.getElementById("stopBtn").style.display = "block";
-const rawLines = document.getElementById("lyricLinesInput").value
-.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+var rawLines = document.getElementById("lyricLinesInput").value
+.split(/\r?\n/)
+.map(function(l) { return l.trim(); })
+.filter(function(l) { return l.length > 0; });
 if (!recordMode && rawLines.length > 0) {
 if (tappedTimings.length >= rawLines.length) tappedTimings = new Array();
 document.getElementById("tapSyncBtn").disabled = false;
 }
-const resParts = document.getElementById("resolutionSelect").value.split("x").map(Number);
-const W = resParts.at(0);
-const H = resParts.at(1);
+var resParts = document.getElementById("resolutionSelect").value.split("x").map(Number);
+var W = resParts.at(0);
+var H = resParts.at(1);
 canvas.width = W;
 canvas.height = H;
-statusText.textContent = "Analyzing audio & detecting beats...";
-const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioCtxClass();
+setStatus("Analyzing audio & detecting beats...");
+var AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+var audioCtx = new AudioCtxClass();
 if (audioCtx.state === "suspended") {
 await audioCtx.resume();
 }
-const arrayBuf = await audioFile.arrayBuffer();
-const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
-const totalDuration = audioBuffer.duration;
-const sensitivity = Number(document.getElementById("beatSensitivity").value);
-const beatsPerCut = Number(document.getElementById("beatsPerCut").value);
-const allBeats = detectBeats(audioBuffer, sensitivity);
-const cutTimes = allBeats.filter((_, idx) => idx % beatsPerCut === 0);
+var arrayBuf = await audioFile.arrayBuffer();
+var audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+var totalDuration = audioBuffer.duration;
+var sensitivity = Number(document.getElementById("beatSensitivity").value);
+var beatsPerCut = Number(document.getElementById("beatsPerCut").value);
+var allBeats = detectBeats(audioBuffer, sensitivity);
+var cutTimes = allBeats.filter(function(_, idx) { return idx % beatsPerCut === 0; });
 if (cutTimes.length === 0) cutTimes.push(0);
-statusText.textContent = "Loading images & video clips...";
-const assets = await loadMediaAssets(mediaFiles);
-let subtitles = new Array();
-const srtFiles = document.getElementById("srtInput").files;
+setStatus("Loading images & video clips...");
+var assets = await loadMediaAssets(mediaFiles);
+var subtitles = new Array();
+var srtFiles = document.getElementById("srtInput").files;
 if (tappedTimings.length > 0) {
 subtitles = tappedTimings;
 } else if (srtFiles && srtFiles.length > 0) {
 subtitles = parseSRT(await srtFiles.item(0).text());
 } else if (rawLines.length > 0) {
-const slice = totalDuration / rawLines.length;
-subtitles = rawLines.map((text, i) => ({
-start: i * slice,
-end: (i + 1) * slice,
-text: text
-}));
+var slice = totalDuration / rawLines.length;
+subtitles = rawLines.map(function(text, i) {
+return { start: i * slice, end: (i + 1) * slice, text: text };
+});
 }
-const source = audioCtx.createBufferSource();
+var source = audioCtx.createBufferSource();
 source.buffer = audioBuffer;
-const analyser = audioCtx.createAnalyser();
+var analyser = audioCtx.createAnalyser();
 analyser.fftSize = 128;
-const freqData = new Uint8Array(analyser.frequencyBinCount);
+var freqData = new Uint8Array(analyser.frequencyBinCount);
 source.connect(analyser);
 analyser.connect(audioCtx.destination);
-let recorder = null;
-const chunks = new Array();
+var recorder = null;
+var chunks = new Array();
 if (recordMode) {
-const dest = audioCtx.createMediaStreamDestination();
+var dest = audioCtx.createMediaStreamDestination();
 analyser.connect(dest);
-const canvasStream = canvas.captureStream(30);
-const trackList = canvasStream.getVideoTracks().concat(dest.stream.getAudioTracks());
-const combinedStream = new MediaStream(trackList);
-const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
+var canvasStream = canvas.captureStream(30);
+var trackList = canvasStream.getVideoTracks().concat(dest.stream.getAudioTracks());
+var combinedStream = new MediaStream(trackList);
+var mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
 ? "video/webm;codecs=vp9,opus"
 : "video/webm";
 recorder = new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 6000000 });
-recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
-recorder.onstop = () => {
-const blob = new Blob(chunks, { type: mime });
-const url = URL.createObjectURL(blob);
+recorder.ondataavailable = function(e) { if (e.data.size > 0) chunks.push(e.data); };
+recorder.onstop = function() {
+var blob = new Blob(chunks, { type: mime });
+var url = URL.createObjectURL(blob);
 downloadContainer.innerHTML = '⬇ Download Rendered Video (.webm)';
-statusText.textContent = "Render complete! Click the green button below to save.";
+setStatus("Render complete! Click the green button below to save.");
 };
 recorder.start();
 }
-assets.forEach((a) => { if (a.type === "video") a.el.play(); });
-const startTime = audioCtx.currentTime;
+assets.forEach(function(a) { if (a.type === "video") a.el.play(); });
+var startTime = audioCtx.currentTime;
 source.start(0);
-statusText.textContent = recordMode ? "Rendering video in real time..." : "Previewing live...";
-const titleText = document.getElementById("titleText").value.trim();
-const fontSize = Number(document.getElementById("fontSize").value);
-const textColor = document.getElementById("textColor").value;
-const textPos = document.getElementById("textPosition").value;
-const filterMode = document.getElementById("filterMode").value;
-const transitionMode = document.getElementById("transitionMode").value;
-const beatZoom = document.getElementById("beatZoom").checked;
-const kenBurns = document.getElementById("kenBurns").checked;
-const showViz = document.getElementById("showVisualizer").checked;
+setStatus(recordMode ? "Rendering video in real time..." : "Previewing live...");
+var titleText = document.getElementById("titleText").value.trim();
+var fontSize = Number(document.getElementById("fontSize").value);
+var textColor = document.getElementById("textColor").value;
+var textPos = document.getElementById("textPosition").value;
+var filterMode = document.getElementById("filterMode").value;
+var transitionMode = document.getElementById("transitionMode").value;
+var beatZoom = document.getElementById("beatZoom").checked;
+var kenBurns = document.getElementById("kenBurns").checked;
+var showViz = document.getElementById("showVisualizer").checked;
 function drawFrame() {
 if (stopRequested) { cleanup(); return; }
-const elapsed = audioCtx.currentTime - startTime;
+var elapsed = audioCtx.currentTime - startTime;
 currentPlaybackElapsed = elapsed;
 if (elapsed >= totalDuration) { cleanup(); return; }
 progressBar.value = (elapsed / totalDuration) * 100;
 timeDisplay.textContent = formatTime(elapsed) + " / " + formatTime(totalDuration);
-let sceneIdx = 0;
-for (let i = 0; i < cutTimes.length; i++) {
+var sceneIdx = 0;
+for (var i = 0; i < cutTimes.length; i++) {
 if (elapsed >= cutTimes.at(i)) sceneIdx = i;
 else break;
 }
-const timeSinceCut = elapsed - (cutTimes.at(sceneIdx) || 0);
-const currAsset = assets.at(sceneIdx % assets.length);
+var timeSinceCut = elapsed - (cutTimes.at(sceneIdx) || 0);
+var currAsset = assets.at(sceneIdx % assets.length);
 ctx.fillStyle = "#000";
 ctx.fillRect(0, 0, W, H);
-const fadeDur = 0.38;
+var fadeDur = 0.38;
 if (transitionMode === "crossfade" && sceneIdx > 0 && timeSinceCut < fadeDur) {
-const prevAsset = assets.at((sceneIdx - 1) % assets.length);
-const prevTimeSinceCut = elapsed - (cutTimes.at(sceneIdx - 1) || 0);
-const alpha = timeSinceCut / fadeDur;
-drawSceneAsset(prevAsset, sceneIdx - 1, prevTimeSinceCut, W, H, filterMode, false, kenBurns, 1.0);
-drawSceneAsset(currAsset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, alpha);
+var prevAsset = assets.at((sceneIdx - 1) % assets.length);
+var prevTimeSinceCut = elapsed - (cutTimes.at(sceneIdx - 1) || 0);
+var alpha = timeSinceCut / fadeDur;
+drawSceneAsset(ctx, prevAsset, sceneIdx - 1, prevTimeSinceCut, W, H, filterMode, false, kenBurns, 1.0);
+drawSceneAsset(ctx, currAsset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, alpha);
 } else {
-drawSceneAsset(currAsset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, 1.0);
+drawSceneAsset(ctx, currAsset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, 1.0);
 }
 if (transitionMode === "flash" && sceneIdx > 0 && timeSinceCut < 0.25) {
-const flashAlpha = (1 - timeSinceCut / 0.25) * 0.75;
+var flashAlpha = (1 - timeSinceCut / 0.25) * 0.75;
 ctx.fillStyle = "rgba(255, 255, 255, " + flashAlpha + ")";
 ctx.fillRect(0, 0, W, H);
 }
 if (showViz) {
 analyser.getByteFrequencyData(freqData);
-const bars = 36;
-const totalBarWidth = W * 0.6;
-const barWidth = totalBarWidth / bars;
-const startX = (W - totalBarWidth) / 2;
-const baseY = H * 0.94;
+var bars = 36;
+var totalBarWidth = W * 0.6;
+var barWidth = totalBarWidth / bars;
+var startX = (W - totalBarWidth) / 2;
+var baseY = H * 0.94;
 ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
-for (let b = 0; b < bars; b++) {
-const val = freqData.at(b) / 255;
-const barH = Math.max(6, val * (H * 0.16));
+for (var b = 0; b < bars; b++) {
+var val = freqData.at(b) / 255;
+var barH = Math.max(6, val * (H * 0.16));
 ctx.fillRect(startX + b * barWidth + 2, baseY - barH, barWidth - 4, barH);
 }
 }
-let activeText = titleText;
-for (const sub of subtitles) {
+var activeText = titleText;
+for (var s = 0; s < subtitles.length; s++) {
+var sub = subtitles.at(s);
 if (elapsed >= sub.start && elapsed <= sub.end) {
 activeText = sub.text;
 break;
@@ -514,7 +533,7 @@ ctx.save();
 ctx.font = "bold " + fontSize + 'px "' + customFontFamily + '", sans-serif';
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
-let y = H * 0.82;
+var y = H * 0.82;
 if (textPos === "top") y = H * 0.12;
 if (textPos === "center") y = H * 0.5;
 ctx.fillStyle = "rgba(0,0,0,0.85)";
@@ -527,26 +546,21 @@ requestAnimationFrame(drawFrame);
 }
 function cleanup() {
 try { source.stop(); } catch (e) {}
-assets.forEach((a) => { if (a.type === "video") a.el.pause(); });
+assets.forEach(function(a) { if (a.type === "video") a.el.pause(); });
 if (recorder && recorder.state !== "inactive") recorder.stop();
 document.getElementById("previewBtn").disabled = false;
 document.getElementById("renderBtn").disabled = false;
 document.getElementById("tapSyncBtn").disabled = true;
 document.getElementById("stopBtn").style.display = "none";
-if (!recordMode) statusText.textContent = "Preview finished.";
+if (!recordMode) setStatus("Preview finished.");
 }
-document.getElementById("stopBtn").onclick = () => {
-stopRequested = true;
-statusText.textContent = "Stopped.";
-};
 requestAnimationFrame(drawFrame);
 } catch (err) {
 alert("Error: " + err.message);
-statusText.textContent = "Error: " + err.message;
+setStatus("Error: " + err.message);
 document.getElementById("previewBtn").disabled = false;
 document.getElementById("renderBtn").disabled = false;
 document.getElementById("stopBtn").style.display = "none";
 }
 }
-document.getElementById("previewBtn").addEventListener("click", () => runStudio(false));
-document.getElementById("renderBtn").addEventListener("click", () => runStudio(true));
+
