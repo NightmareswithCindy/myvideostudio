@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Beat-Sync Music Video & Movie Studio</title>
+<title>Beat-Sync Music Video & Movie Studio Pro</title>
 <style>
   :root {
     --bg: #0f1117;
@@ -20,47 +20,52 @@
     display: flex; flex-direction: column; min-height: 100vh;
   }
   header {
-    padding: 18px 28px; background: var(--panel);
+    padding: 16px 26px; background: var(--panel);
     border-bottom: 1px solid var(--border);
     display: flex; justify-content: space-between; align-items: center;
   }
-  header h1 { margin: 0; font-size: 1.3rem; }
-  header span { color: var(--muted); font-size: 0.9rem; }
+  header h1 { margin: 0; font-size: 1.25rem; }
+  header span { color: var(--muted); font-size: 0.88rem; }
   .container {
-    display: grid; grid-template-columns: 380px 1fr; gap: 20px;
-    padding: 20px; max-width: 1450px; width: 100%; margin: 0 auto; flex: 1;
+    display: grid; grid-template-columns: 410px 1fr; gap: 20px;
+    padding: 20px; max-width: 1500px; width: 100%; margin: 0 auto; flex: 1;
   }
-  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+  @media (max-width: 960px) { .container { grid-template-columns: 1fr; } }
   .panel {
     background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+    border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px;
+    max-height: calc(100vh - 95px); overflow-y: auto;
   }
   .section-title {
-    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--accent); font-weight: 700; margin-top: 4px;
+    font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent); font-weight: 700; margin-top: 6px;
+    border-bottom: 1px solid var(--border); padding-bottom: 4px;
   }
-  label { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; color: var(--muted); }
-  input[type="file"], input[type="text"], input[type="number"], select {
+  label { display: flex; flex-direction: column; gap: 5px; font-size: 0.88rem; color: var(--muted); }
+  input[type="file"], input[type="text"], input[type="number"], select, textarea {
     background: #12141c; border: 1px solid var(--border); color: var(--text);
-    padding: 8px 10px; border-radius: 8px; font-size: 0.9rem; width: 100%;
+    padding: 8px 10px; border-radius: 8px; font-size: 0.88rem; width: 100%;
   }
+  textarea { resize: vertical; min-height: 85px; font-family: monospace; line-height: 1.4; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .checkbox-row {
     display: flex; align-items: center; gap: 8px; color: var(--text);
-    font-size: 0.9rem; cursor: pointer;
+    font-size: 0.88rem; cursor: pointer;
   }
   button {
-    background: var(--accent); color: white; border: none; padding: 12px 16px;
-    border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer;
+    background: var(--accent); color: white; border: none; padding: 11px 14px;
+    border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer;
     transition: background 0.2s;
   }
   button:hover:not(:disabled) { background: var(--accent-hover); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
   button.secondary { background: #2c3142; }
   button.secondary:hover:not(:disabled) { background: #3a4056; }
+  button.tap-btn { background: #e11d48; }
+  button.tap-btn:hover:not(:disabled) { background: #be123c; }
   .preview-area {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 14px;
+    gap: 14px; max-height: none;
   }
   canvas {
     max-width: 100%; max-height: 68vh; background: #000;
@@ -69,22 +74,23 @@
   }
   .status-bar {
     width: 100%; background: #12141c; border: 1px solid var(--border);
-    padding: 10px 14px; border-radius: 8px; font-size: 0.9rem;
+    padding: 10px 14px; border-radius: 8px; font-size: 0.88rem;
     display: flex; justify-content: space-between; align-items: center;
   }
   progress { width: 100%; height: 8px; border-radius: 4px; }
   a.download-btn {
     display: inline-block; background: #10b981; color: #052e16;
-    text-decoration: none; font-weight: 700; padding: 12px 20px;
+    text-decoration: none; font-weight: 700; padding: 12px 22px;
     border-radius: 8px; text-align: center;
   }
+  .hint { font-size: 0.78rem; color: var(--muted); line-height: 1.35; }
 </style>
 </head>
 <body>
 
 <header>
   <h1>🎬 Beat-Sync Music Video & Movie Studio</h1>
-  <span>100% Free • Browser-Rendered • Unlimited</span>
+  <span>Crossfades • Ken Burns Motion • Live Lyric Tapper</span>
 </header>
 
 <div class="container">
@@ -97,12 +103,9 @@
       <input type="file" id="mediaInput" accept="image/*,video/*" multiple />
     </label>
 
-    <div class="section-title">2. Titles, Lyrics & Custom Fonts</div>
+    <div class="section-title">2. Titles, Custom Fonts & Live Lyric Editor</div>
     <label>Static Title / Watermark (Optional)
       <input type="text" id="titleText" placeholder="Movie Title or Artist Name..." />
-    </label>
-    <label>Timed Lyrics / Subtitles (.srt Optional)
-      <input type="file" id="srtInput" accept=".srt" />
     </label>
     <label>Custom Font (.ttf, .otf, .woff Optional)
       <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2" />
@@ -123,24 +126,45 @@
       </select>
     </label>
 
-    <div class="section-title">3. Beat-Sync & Visual FX</div>
+    <label>On-Screen Lyrics (One line per lyric — or upload .srt below)
+      <textarea id="lyricLinesInput" placeholder="Type or paste lyrics here, one line per phrase...&#10;Line 1: Walking through the neon rain&#10;Line 2: Midnight city calls my name"></textarea>
+    </label>
     <div class="row">
+      <button id="tapSyncBtn" class="tap-btn" type="button" disabled>⏱ Tap Next Lyric (During Preview)</button>
+      <button id="clearSyncBtn" class="secondary" type="button">Reset Timings</button>
+    </div>
+    <div id="syncStatus" class="hint">Tip: Paste lyrics above, hit <b>Preview</b>, and tap the red button each time a new line starts!</div>
+    <label>Or Load External .SRT File
+      <input type="file" id="srtInput" accept=".srt" />
+    </label>
+
+    <div class="section-title">3. Transitions, Motion & FX</div>
+    <div class="row">
+      <label>Scene Transition
+        <select id="transitionMode">
+          <option value="crossfade">Smooth Crossfade</option>
+          <option value="flash">Beat Flash-to-White</option>
+          <option value="cut">Hard Cut</option>
+        </select>
+      </label>
       <label>Beats Per Scene Cut
         <input type="number" id="beatsPerCut" value="4" min="1" max="32" />
       </label>
-      <label>Sensitivity (1-10)
+    </div>
+    <div class="row">
+      <label>Beat Sensitivity (1-10)
         <input type="number" id="beatSensitivity" value="6" min="1" max="10" />
       </label>
+      <label>Cinema Color Filter
+        <select id="filterMode">
+          <option value="none">None (Original)</option>
+          <option value="grayscale(100%) contrast(125%)">Noir (Black & White)</option>
+          <option value="sepia(45%) saturate(130%) contrast(108%)">Warm Vintage</option>
+          <option value="hue-rotate(185deg) saturate(115%) contrast(110%)">Cool Cinema</option>
+          <option value="contrast(120%) saturate(140%)">Vibrant Pop</option>
+        </select>
+      </label>
     </div>
-    <label>Cinema Color Filter
-      <select id="filterMode">
-        <option value="none">None (Original)</option>
-        <option value="grayscale(100%) contrast(125%)">Noir (Black & White)</option>
-        <option value="sepia(45%) saturate(130%) contrast(108%)">Warm Vintage</option>
-        <option value="hue-rotate(185deg) saturate(115%) contrast(110%)">Cool Cinema</option>
-        <option value="contrast(120%) saturate(140%)">Vibrant Pop</option>
-      </select>
-    </label>
     <label>Output Resolution
       <select id="resolutionSelect">
         <option value="1280x720">720p Landscape (1280×720)</option>
@@ -149,6 +173,9 @@
       </select>
     </label>
 
+    <label class="checkbox-row">
+      <input type="checkbox" id="kenBurns" checked /> Enable Ken Burns Slow Pan/Drift Motion
+    </label>
     <label class="checkbox-row">
       <input type="checkbox" id="beatZoom" checked /> Enable Beat-Punch Zoom Effect
     </label>
@@ -181,14 +208,16 @@ const statusText = document.getElementById("statusText");
 const timeDisplay = document.getElementById("timeDisplay");
 const progressBar = document.getElementById("progressBar");
 const downloadContainer = document.getElementById("downloadContainer");
+const syncStatus = document.getElementById("syncStatus");
 
 let customFontFamily = "sans-serif";
-let isRunning = false;
 let stopRequested = false;
+let tappedTimings = [];
+let currentPlaybackElapsed = 0;
 
 // Load Custom Font
 document.getElementById("fontInput").addEventListener("change", async (e) => {
-  const file = e.target.files[0];
+  const file = e.target.files.item(0);
   if (!file) return;
   const buf = await file.arrayBuffer();
   const fontName = "UserCustomFont_" + Date.now();
@@ -196,82 +225,108 @@ document.getElementById("fontInput").addEventListener("change", async (e) => {
   await fontFace.load();
   document.fonts.add(fontFace);
   customFontFamily = fontName;
-  statusText.textContent = `Loaded custom font: ${file.name}`;
+  statusText.textContent = "Loaded custom font: " + file.name;
 });
 
+// Reset tapped lyric timings
+document.getElementById("clearSyncBtn").addEventListener("click", () => {
+  tappedTimings = [];
+  syncStatus.textContent = "Timings cleared. Hit Preview and tap 'Tap Next Lyric' to re-time.";
+});
+
+// Live Lyric Tap Handler
+document.getElementById("tapSyncBtn").addEventListener("click", () => {
+  const rawLines = document.getElementById("lyricLinesInput").value
+    .split(/\r?\n/)
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  if (rawLines.length === 0) return;
+
+  const idx = tappedTimings.length;
+  if (idx > 0) {
+    tappedTimings.at(idx - 1).end = currentPlaybackElapsed;
+  }
+  if (idx < rawLines.length) {
+    tappedTimings.push({
+Use code with caution.
+start: currentPlaybackElapsed,
+end: currentPlaybackElapsed + 5.0,
+text: rawLines.at(idx)
+});
+const nextLine = rawLines.at(idx + 1);
+const nextPreview = nextLine ? 'Next: "' + nextLine + '"' : "All lines timed!";
+syncStatus.innerHTML = "Stamped line " + (idx + 1) + "/" + rawLines.length + " at " + currentPlaybackElapsed.toFixed(1) + "s. " + nextPreview + "";
+}
+});
 // Parse .SRT Subtitles
 function parseSRT(srtText) {
-  const blocks = srtText.trim().split(/\r?\n\r?\n/);
-  const subs = [];
-  const timeRegex = /(\d+):(\d+):(\d+)[,.](\d+)\s*-->\s*(\d+):(\d+):(\d+)[,.](\d+)/;
-  for (const block of blocks) {
-    const lines = block.split(/\r?\n/);
-    for (let i = 0; i < lines.length; i++) {
-      const m = lines[i].match(timeRegex);
-      if (m) {
-        const start = +m[1]*3600 + +m[2]*60 + +m[3] + +m[4]/1000;
-        const end = +m[5]*3600 + +m[6]*60 + +m[7] + +m[8]/1000;
-        const text = lines.slice(i + 1).join(" ").trim();
-        if (text) subs.push({ start, end, text });
-        break;
-      }
-    }
-  }
-  return subs;
+const blocks = srtText.trim().split(/\r?\n\r?\n/);
+const subs = [];
+const timeRegex = /(\d+):(\d+):(\d+),.\s*-->\s*(\d+):(\d+):(\d+),./;
+for (const block of blocks) {
+const lines = block.split(/\r?\n/);
+for (let i = 0; i < lines.length; i++) {
+const m = lines.at(i).match(timeRegex);
+if (m) {
+const start = Number(m.at(1)) * 3600 + Number(m.at(2)) * 60 + Number(m.at(3)) + Number(m.at(4)) / 1000;
+const end = Number(m.at(5)) * 3600 + Number(m.at(6)) * 60 + Number(m.at(7)) + Number(m.at(8)) / 1000;
+const text = lines.slice(i + 1).join(" ").trim();
+if (text) subs.push({ start, end, text });
+break;
 }
-
+}
+}
+return subs;
+}
 // Detect Beats from AudioBuffer
 function detectBeats(audioBuffer, sensitivity) {
-  const data = audioBuffer.getChannelData(0);
-  const sampleRate = audioBuffer.sampleRate;
-  const windowSize = Math.floor(sampleRate * 0.05); // 50ms windows
-  const energies = [];
-
-  for (let i = 0; i < data.length; i += windowSize) {
-    let sum = 0;
-    for (let j = 0; j < windowSize && i + j < data.length; j++) {
-      sum += data[i + j] * data[i + j];
-    }
-    energies.push(Math.sqrt(sum / windowSize));
-  }
-
-  const beats =;
-  const thresholdFactor = 1.6 - (sensitivity * 0.05); // 1.1 to 1.55
-  const minGapSec = 0.28;
-
-  for (let i = 10; i < energies.length; i++) {
-    let localAvg = 0;
-    for (let k = i - 10; k < i; k++) localAvg += energies[k];
-    localAvg /= 10;
-
-    const timeSec = (i * windowSize) / sampleRate;
-    if (energies[i] > localAvg * thresholdFactor && energies[i] > 0.03) {
-      if (timeSec - beats[beats.length - 1] >= minGapSec) {
-        beats.push(timeSec);
-      }
-    }
-  }
-  return beats;
+const data = audioBuffer.getChannelData(0);
+const sampleRate = audioBuffer.sampleRate;
+const windowSize = Math.floor(sampleRate * 0.05);
+const energies = [];
+for (let i = 0; i < data.length; i += windowSize) {
+let sum = 0;
+for (let j = 0; j < windowSize && i + j < data.length; j++) {
+const sample = data.at(i + j);
+sum += sample * sample;
 }
-
-// Load Visual Assets (Images & Videos)
+energies.push(Math.sqrt(sum / windowSize));
+}
+const beats = new Array(0);
+const thresholdFactor = 1.6 - (sensitivity * 0.05);
+const minGapSec = 0.28;
+for (let i = 10; i < energies.length; i++) {
+let localAvg = 0;
+for (let k = i - 10; k < i; k++) localAvg += energies.at(k);
+localAvg /= 10;
+const timeSec = (i * windowSize) / sampleRate;
+if (energies.at(i) > localAvg * thresholdFactor && energies.at(i) > 0.03) {
+if (timeSec - beats.at(-1) >= minGapSec) {
+beats.push(timeSec);
+}
+}
+}
+return beats;
+}
+// Load Visual Assets
 async function loadMediaAssets(files) {
-  const assets = [];
-  for (const file of files) {
-    const url = URL.createObjectURL(file);
-    if (file.type.startsWith("video/")) {
-      const vid = document.createElement("video");
-      vid.src = url;
-      vid.muted = true;
-      vid.loop = true;
-      vid.playsInline = true;
-      await new Promise((res) => { vid.onloadedmetadata = res; });
-      assets.push({ type: "video", el: vid });
-    } else {
-      const img = new Image();
-      img.src = url;
-      await new Promise((res) => { img.onload = res; });
-Use code with caution.
+const assets = [];
+for (let i = 0; i < files.length; i++) {
+const file = files.item(i);
+const url = URL.createObjectURL(file);
+if (file.type.startsWith("video/")) {
+const vid = document.createElement("video");
+vid.src = url;
+vid.muted = true;
+vid.loop = true;
+vid.playsInline = true;
+await new Promise((res) => { vid.onloadedmetadata = res; });
+assets.push({ type: "video", el: vid });
+} else {
+const img = new Image();
+img.src = url;
+await new Promise((res) => { img.onload = res; });
 assets.push({ type: "image", el: img });
 }
 }
@@ -280,26 +335,70 @@ return assets;
 function formatTime(sec) {
 const m = Math.floor(sec / 60).toString().padStart(2, "0");
 const s = Math.floor(sec % 60).toString().padStart(2, "0");
-return ${m}:${s};
+return m + ":" + s;
+}
+// Draw a single asset with cover scaling, Beat Zoom, and Ken Burns motion
+function drawSceneAsset(asset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, alpha) {
+ctx.save();
+ctx.globalAlpha = alpha;
+ctx.filter = filterMode;
+const mediaW = asset.type === "video" ? asset.el.videoWidth : asset.el.width;
+const mediaH = asset.type === "video" ? asset.el.videoHeight : asset.el.height;
+const baseScale = Math.max(W / mediaW, H / mediaH);
+const pulse = beatZoom ? 1.0 + 0.07 * Math.exp(-6 * timeSinceCut) : 1.0;
+let kbScale = 1.0;
+let panX = 0;
+let panY = 0;
+if (kenBurns) {
+const dir = sceneIdx % 4;
+const progress = Math.min(timeSinceCut / 6.0, 1.0);
+kbScale = 1.04 + 0.06 * progress;
+const maxShiftX = (mediaW * baseScale * kbScale - W) * 0.4;
+const maxShiftY = (mediaH * baseScale * kbScale - H) * 0.4;
+if (dir === 0) { panX = -maxShiftX * progress; }
+else if (dir === 1) { panX = maxShiftX * progress; }
+else if (dir === 2) { panY = -maxShiftY * progress; }
+else { panY = maxShiftY * progress; }
+}
+const finalScale = baseScale * pulse * kbScale;
+const drawW = mediaW * finalScale;
+const drawH = mediaH * finalScale;
+const x = (W - drawW) / 2 + panX;
+const y = (H - drawH) / 2 + panY;
+ctx.drawImage(asset.el, x, y, drawW, drawH);
+ctx.restore();
 }
 async function runStudio(recordMode) {
-const audioFile = document.getElementById("audioInput").files[0];
+try {
+const audioFiles = document.getElementById("audioInput").files;
 const mediaFiles = document.getElementById("mediaInput").files;
-if (!audioFile || mediaFiles.length === 0) {
+if (!audioFiles || audioFiles.length === 0 || !mediaFiles || mediaFiles.length === 0) {
 alert("Please upload both an audio track and at least one image or video clip.");
 return;
 }
-isRunning = true;
+const audioFile = audioFiles.item(0);
 stopRequested = false;
 downloadContainer.innerHTML = "";
 document.getElementById("previewBtn").disabled = true;
 document.getElementById("renderBtn").disabled = true;
 document.getElementById("stopBtn").style.display = "block";
-const [W, H] = document.getElementById("resolutionSelect").value.split("x").map(Number);
+const rawLines = document.getElementById("lyricLinesInput").value
+.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+if (!recordMode && rawLines.length > 0) {
+if (tappedTimings.length >= rawLines.length) tappedTimings = [];
+document.getElementById("tapSyncBtn").disabled = false;
+}
+const resParts = document.getElementById("resolutionSelect").value.split("x").map(Number);
+const W = resParts.at(0);
+const H = resParts.at(1);
 canvas.width = W;
 canvas.height = H;
 statusText.textContent = "Analyzing audio & detecting beats...";
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioCtxClass();
+if (audioCtx.state === "suspended") {
+await audioCtx.resume();
+}
 const arrayBuf = await audioFile.arrayBuffer();
 const audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
 const totalDuration = audioBuffer.duration;
@@ -307,14 +406,23 @@ const sensitivity = Number(document.getElementById("beatSensitivity").value);
 const beatsPerCut = Number(document.getElementById("beatsPerCut").value);
 const allBeats = detectBeats(audioBuffer, sensitivity);
 const cutTimes = allBeats.filter((_, idx) => idx % beatsPerCut === 0);
+if (cutTimes.length === 0) cutTimes.push(0);
 statusText.textContent = "Loading images & video clips...";
 const assets = await loadMediaAssets(mediaFiles);
 let subtitles = [];
-const srtFile = document.getElementById("srtInput").files[0];
-if (srtFile) {
-subtitles = parseSRT(await srtFile.text());
+const srtFiles = document.getElementById("srtInput").files;
+if (tappedTimings.length > 0) {
+subtitles = tappedTimings;
+} else if (srtFiles && srtFiles.length > 0) {
+subtitles = parseSRT(await srtFiles.item(0).text());
+} else if (rawLines.length > 0) {
+const slice = totalDuration / rawLines.length;
+subtitles = rawLines.map((text, i) => ({
+start: i * slice,
+end: (i + 1) * slice,
+text: text
+}));
 }
-// Setup Audio Playback + Analyser + Optional MediaRecorder
 const source = audioCtx.createBufferSource();
 source.buffer = audioBuffer;
 const analyser = audioCtx.createAnalyser();
@@ -340,12 +448,11 @@ recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
 recorder.onstop = () => {
 const blob = new Blob(chunks, { type: mime });
 const url = URL.createObjectURL(blob);
-downloadContainer.innerHTML = <a class="download-btn" href="${url}" download="music_video.webm">⬇ Download Rendered Video (.webm)</a>;
+downloadContainer.innerHTML = '⬇ Download Rendered Video (.webm)';
 statusText.textContent = "Render complete! Click the green button below to save.";
 };
 recorder.start();
 }
-// Start playing any video clips
 assets.forEach((a) => { if (a.type === "video") a.el.play(); });
 const startTime = audioCtx.currentTime;
 source.start(0);
@@ -355,43 +462,41 @@ const fontSize = Number(document.getElementById("fontSize").value);
 const textColor = document.getElementById("textColor").value;
 const textPos = document.getElementById("textPosition").value;
 const filterMode = document.getElementById("filterMode").value;
+const transitionMode = document.getElementById("transitionMode").value;
 const beatZoom = document.getElementById("beatZoom").checked;
+const kenBurns = document.getElementById("kenBurns").checked;
 const showViz = document.getElementById("showVisualizer").checked;
 function drawFrame() {
-if (stopRequested) {
-cleanup();
-return;
-}
+if (stopRequested) { cleanup(); return; }
 const elapsed = audioCtx.currentTime - startTime;
-if (elapsed >= totalDuration) {
-cleanup();
-return;
-}
+currentPlaybackElapsed = elapsed;
+if (elapsed >= totalDuration) { cleanup(); return; }
 progressBar.value = (elapsed / totalDuration) * 100;
-timeDisplay.textContent = ${formatTime(elapsed)} / ${formatTime(totalDuration)};
-// Find active scene index based on beat cuts
+timeDisplay.textContent = formatTime(elapsed) + " / " + formatTime(totalDuration);
 let sceneIdx = 0;
 for (let i = 0; i < cutTimes.length; i++) {
-if (elapsed >= cutTimes[i]) sceneIdx = i;
+if (elapsed >= cutTimes.at(i)) sceneIdx = i;
 else break;
 }
-const timeSinceCut = elapsed - (cutTimes[sceneIdx] || 0);
-const asset = assets[sceneIdx % assets.length];
-// Draw Background Media with Cover Scaling + Beat Zoom
-ctx.save();
+const timeSinceCut = elapsed - (cutTimes.at(sceneIdx) || 0);
+const currAsset = assets.at(sceneIdx % assets.length);
 ctx.fillStyle = "#000";
 ctx.fillRect(0, 0, W, H);
-ctx.filter = filterMode;
-const mediaW = asset.type === "video" ? asset.el.videoWidth : asset.el.width;
-const mediaH = asset.type === "video" ? asset.el.videoHeight : asset.el.height;
-const baseScale = Math.max(W / mediaW, H / mediaH);
-const pulse = beatZoom ? 1.0 + 0.08 * Math.exp(-6 * timeSinceCut) : 1.0;
-const finalScale = baseScale * pulse;
-const drawW = mediaW * finalScale;
-const drawH = mediaH * finalScale;
-ctx.drawImage(asset.el, (W - drawW) / 2, (H - drawH) / 2, drawW, drawH);
-ctx.restore();
-// Draw Audio-Reactive Visualizer
+const fadeDur = 0.38;
+if (transitionMode === "crossfade" && sceneIdx > 0 && timeSinceCut < fadeDur) {
+const prevAsset = assets.at((sceneIdx - 1) % assets.length);
+const prevTimeSinceCut = elapsed - (cutTimes.at(sceneIdx - 1) || 0);
+const alpha = timeSinceCut / fadeDur;
+drawSceneAsset(prevAsset, sceneIdx - 1, prevTimeSinceCut, W, H, filterMode, false, kenBurns, 1.0);
+drawSceneAsset(currAsset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, alpha);
+} else {
+drawSceneAsset(currAsset, sceneIdx, timeSinceCut, W, H, filterMode, beatZoom, kenBurns, 1.0);
+}
+if (transitionMode === "flash" && sceneIdx > 0 && timeSinceCut < 0.25) {
+const flashAlpha = (1 - timeSinceCut / 0.25) * 0.75;
+ctx.fillStyle = "rgba(255, 255, 255, " + flashAlpha + ")";
+ctx.fillRect(0, 0, W, H);
+}
 if (showViz) {
 analyser.getByteFrequencyData(freqData);
 const bars = 36;
@@ -401,12 +506,11 @@ const startX = (W - totalBarWidth) / 2;
 const baseY = H * 0.94;
 ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
 for (let b = 0; b < bars; b++) {
-const val = freqData[b] / 255;
+const val = freqData.at(b) / 255;
 const barH = Math.max(6, val * (H * 0.16));
 ctx.fillRect(startX + b * barWidth + 2, baseY - barH, barWidth - 4, barH);
 }
 }
-// Determine Active Text (SRT Lyric takes priority over static title)
 let activeText = titleText;
 for (const sub of subtitles) {
 if (elapsed >= sub.start && elapsed <= sub.end) {
@@ -416,14 +520,13 @@ break;
 }
 if (activeText) {
 ctx.save();
-ctx.font = bold ${fontSize}px "${customFontFamily}", sans-serif;
+ctx.font = "bold " + fontSize + 'px "' + customFontFamily + '", sans-serif';
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 let y = H * 0.82;
 if (textPos === "top") y = H * 0.12;
 if (textPos === "center") y = H * 0.5;
-// Drop Shadow
-ctx.fillStyle = "rgba(0,0,0,0.8)";
+ctx.fillStyle = "rgba(0,0,0,0.85)";
 ctx.fillText(activeText, W / 2 + 3, y + 3);
 ctx.fillStyle = textColor;
 ctx.fillText(activeText, W / 2, y);
@@ -432,12 +535,12 @@ ctx.restore();
 requestAnimationFrame(drawFrame);
 }
 function cleanup() {
-isRunning = false;
 try { source.stop(); } catch (e) {}
 assets.forEach((a) => { if (a.type === "video") a.el.pause(); });
 if (recorder && recorder.state !== "inactive") recorder.stop();
 document.getElementById("previewBtn").disabled = false;
 document.getElementById("renderBtn").disabled = false;
+document.getElementById("tapSyncBtn").disabled = true;
 document.getElementById("stopBtn").style.display = "none";
 if (!recordMode) statusText.textContent = "Preview finished.";
 }
@@ -446,6 +549,13 @@ stopRequested = true;
 statusText.textContent = "Stopped.";
 };
 requestAnimationFrame(drawFrame);
+} catch (err) {
+alert("Error: " + err.message);
+statusText.textContent = "Error: " + err.message;
+document.getElementById("previewBtn").disabled = false;
+document.getElementById("renderBtn").disabled = false;
+document.getElementById("stopBtn").style.display = "none";
+}
 }
 document.getElementById("previewBtn").addEventListener("click", () => runStudio(false));
 document.getElementById("renderBtn").addEventListener("click", () => runStudio(true));
